@@ -1,0 +1,8 @@
+[package]
+name = "glutin_test"
+version = "0.1.0"
+authors = ["Miridyan <Michael.R.Ditto@gmail.com>"]
+
+[dependencies]
+glium = "0.14.0"
+image = "0.10.1"
