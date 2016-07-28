@@ -7,7 +7,7 @@ use glium::index::PrimitiveType;
 use glium::glutin::VirtualKeyCode;
 use glium::{Surface, DisplayBuild};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Vertex {
 	position: [f32; 2],
 }
@@ -43,7 +43,7 @@ fn main() {
 		.unwrap();
 
 	let mut t: f32 = 0.0;
-	let t_step: f32 = 0.0006;
+	let t_step: f32 = 0.006;
 
 	let vertex_shader = r#"
 		#version 140
