@@ -45,27 +45,8 @@ fn main() {
 	let mut t: f32 = 0.0;
 	let t_step: f32 = 0.006;
 
-	let vertex_shader = r#"
-		#version 140
-		in vec2 position;
-		out vec4 my_attr;
-
-		uniform mat4 matrix;
-
-		void main() {
-			my_attr = matrix * vec4(position, 0.0, 1.0);
-			gl_Position = my_attr;
-		}
-	"#;
-	let fragment_shader = r#"
-		#version 140
-		in vec4 my_attr;
-		out vec4 color;
-
-		void main() {
-			color = my_attr;
-		}
-	"#;
+    let vertex_shader = include_str!("../shaders/vertex.glsl");
+    let fragment_shader = include_str!("../shaders/fragment.glsl");
 
 	let program = glium::Program::from_source(&display, vertex_shader, fragment_shader, None)
 		.unwrap();
@@ -73,22 +54,38 @@ fn main() {
 	'main: loop {
 		let mut target = display.draw();
 
+        let perspective = {
+            let (width, height) = target.get_dimensions();
+            let aspect_ratio = height as f32 / width as f32;
+
+            let fov: f32 = 3.141592 / 3.0;
+            let zfar = 1024.0;
+            let znear = 0.1;
+
+            let f = 1.0 / (fov / 2.0).tan();
+
+            [
+                [f * aspect_ratio, 0.0,                   0.0                 , 0.0],
+                [       0.0      ,   f,                   0.0                 , 0.0],
+                [       0.0      , 0.0,     (zfar + znear) / (zfar - znear)   , 0.0],
+                [       0.0      , 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
+            ]
+        };
+        let matrix = [
+            [t.cos(), t.sin(), 0.0, 0.0],
+            [-t.sin(), t.cos(), 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0f32],
+        ];
+
 		t += t_step;
 		if t >= 2.0 * std::f32::consts::PI {
 			t = 0.0;
 		}
 
-		let uniforms = uniform! {
-			matrix: [
-				[t.cos(), t.sin(), 0.0, 0.0],
-				[-t.sin(), t.cos(), 0.0, 0.0],
-				[0.0, 0.0, 1.0, 0.0],
-				[0.0, 0.0, 0.0, 1.0f32],
-			]
-		};
-
 		target.clear_color(1.0, 1.0, 1.0, 1.0);
-		target.draw(&vert_buffer, &indices, &program, &uniforms, &Default::default()).unwrap();
+		target.draw(&vert_buffer, &indices, &program, &uniform! {matrix: matrix, perspective: perspective},
+            &Default::default()).unwrap();
 		target.finish().unwrap();
 
 		for events in display.poll_events() {
